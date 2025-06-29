@@ -4,29 +4,31 @@ options:
   deploymentTarget:
     iOS: "15.0"
 
-# 👉 NEW: pull AWS SDK for iOS via Swift-PM
+# external packages
 packages:
   AWSiOSSDK:
     url: https://github.com/aws-amplify/aws-sdk-ios-spm.git
-    from: 2.31.0          # or “from: 2.30.0” anything 2.30+
+    from: 2.31.0        # any 2.30+ is fine
 
 targets:
+  # 1️⃣ Your framework target with AWS dependencies
+  HanguCore:
+    type: framework
+    platform: iOS
+    sources: [HanguCore]
+    dependencies:
+      - package: AWSiOSSDK
+        product: AWSCore
+      - package: AWSiOSSDK
+        product: AWSPolly
+
+  # 2️⃣ Your app target that links the local framework
   HanguTTS:
     type: application
     platform: iOS
     sources: [HanguTTS]
     dependencies:
-      - package: HanguCore             # our local package
-  HanguCore:
-    type: framework                    # keep this entry if you defined it; otherwise leave out
-    platform: iOS
-    sources: [HanguCore]
-    dependencies:
-      # 👉 NEW: link AWSCore + AWSPolly
-      - package: AWSiOSSDK
-        product: AWSCore
-      - package: AWSiOSSDK
-        product: AWSPolly
+      - target: HanguCore          # <-- changed from “package” to “target”
     info:
       path: Info.plist
       properties:
@@ -35,3 +37,4 @@ targets:
         UILaunchStoryboardName: ""
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
