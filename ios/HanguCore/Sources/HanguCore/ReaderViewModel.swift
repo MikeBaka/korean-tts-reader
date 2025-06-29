@@ -1,4 +1,4 @@
-// PASTE THIS INTO ReaderViewModel.swift
+// PASTE THIS UPDATED CODE INTO ReaderViewModel.swift
 
 import SwiftUI
 import Combine
@@ -38,6 +38,12 @@ public final class ReaderViewModel: ObservableObject {
         } else {
             ttsPlayer.play(url: url)
         }
+    }
+
+    // FIX 3: Added the missing exportVocab function.
+    public func exportVocab() {
+        print("Export vocabulary action triggered.")
+        // You will add your real export logic here later.
     }
 
     private func setupBindings() {
