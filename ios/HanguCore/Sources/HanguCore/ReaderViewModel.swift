@@ -1,4 +1,4 @@
-// PASTE THIS FINAL VERSION INTO ReaderViewModel.swift
+// PASTE THIS INTO ReaderViewModel.swift
 
 import SwiftUI
 import Combine
@@ -22,19 +22,11 @@ public final class ReaderViewModel: ObservableObject {
     private let ttsPlayer: TTSPlayerProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    // THE FIX: The init method takes no arguments again.
-    public init() {
-        let sampleText = """
-        안녕하세요, 만나서 반갑습니다. 제 이름은 루입니다.
-        이것은 스크롤 테스트를 위한 긴 텍스트입니다.
-        자동 스크롤 기능이 하이라이트된 단어를 화면의 상단 1/3 지점에 유지하는지 확인해 보겠습니다.
-        뷰가 업데이트될 때 스크롤이 부드럽게 이동해야 합니다.
-        이 기능은 사용자가 텍스트를 편안하게 따라 읽을 수 있도록 도와줍니다.
-        마지막 줄까지 테스트해 보겠습니다.
-        """
-        self.originalText = sampleText
-        self.ttsPlayer = TTSPlayer()
-        self.attributed = AttributedString(sampleText)
+    // THIS IS THE CORRECT INIT METHOD
+    public init(text: String, ttsPlayer: TTSPlayerProtocol = TTSPlayer()) {
+        self.originalText = text
+        self.ttsPlayer = ttsPlayer
+        self.attributed = AttributedString(text)
         setupBindings()
         synthesizeText()
     }
