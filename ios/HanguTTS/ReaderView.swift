@@ -1,4 +1,4 @@
-// PASTE THIS INTO ReaderView.swift
+// PASTE THIS CORRECTED CODE INTO ReaderView.swift
 
 import SwiftUI
 import HanguCore
@@ -17,6 +17,7 @@ struct ReaderView: View {
     """
 
     init() {
+        // This line is now correct because the ViewModel's init matches.
         _viewModel = StateObject(wrappedValue: ReaderViewModel(text: Self.sampleText))
     }
 
@@ -32,14 +33,14 @@ struct ReaderView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    // THE FIX IS HERE
+                    // FIX: Button actions MUST be closures.
                     Button(action: { viewModel.togglePlay() }) {
                         Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
                             .font(.body)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    // AND HERE
+                    // FIX: Button actions MUST be closures.
                     Button("Export", action: { viewModel.exportVocab() })
                 }
             }
