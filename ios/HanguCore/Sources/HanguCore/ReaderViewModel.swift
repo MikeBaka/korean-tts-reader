@@ -88,7 +88,7 @@ public final class ReaderViewModel: ObservableObject {
         if currentWordIndex >= 0 && currentWordIndex < speechMarks.count {
             let mark = speechMarks[currentWordIndex]
             // FIX 3: The property on SpeechMark is .text, not .value
-            if let range = newAttributed.range(of: mark.text) {
+            if let range = newAttributed.range(of: mark.value) {
                 newAttributed[range].backgroundColor = .yellow
             }
         }
