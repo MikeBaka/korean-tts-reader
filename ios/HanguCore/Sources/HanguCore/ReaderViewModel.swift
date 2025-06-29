@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 public final class ReaderViewModel: ObservableObject {
     // MARK: - Published values expected by ReaderView
+    @Published public private(set) var isPlaying: Bool = false
 
     @Published var speechMarks: [SpeechMark] = []
 
@@ -53,13 +54,12 @@ public final class ReaderViewModel: ObservableObject {
     func togglePlay() {
         if ttsPlayer.isPlaying {
             ttsPlayer.pause()
-        } else {
-            ttsPlayer.play()
+        } else if
+          let url = Bundle.main.url(forResource: "sample", withExtension: "mp3") {
+            ttsPlayer.play(url: url)
         }
     }
 
-        synthesizeText()
-    }
 
     // MARK: - Public Methods
     public func togglePlay() {
