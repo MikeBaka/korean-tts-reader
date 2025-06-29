@@ -1,0 +1,26 @@
+name: HanguTTS
+options:
+  bundleIdPrefix: com.example    # change if you like
+  deploymentTarget:
+    iOS: "15.0"
+
+packages:
+  HanguCore:
+    path: ./HanguCore            # local Swift Package
+
+targets:
+  HanguTTS:
+    type: application
+    platform: iOS
+    sources: [HanguTTS]          # folder with HanguTTSApp.swift, ReaderView.swift…
+    dependencies:
+      - package: HanguCore
+    info:
+      path: Info.plist           # we’ll generate a minimal one below
+      properties:
+        CFBundleDisplayName: HanguTTS
+        CFBundleIdentifier: com.example.hangutts
+        UILaunchStoryboardName: ""
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
