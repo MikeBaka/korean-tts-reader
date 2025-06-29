@@ -124,7 +124,8 @@ public final class ReaderViewModel: ObservableObject {
             
             if let range = Range(NSRange(location: mark.charStart, length: mark.charEnd - mark.charStart), in: originalText) {
                 if let attrRange = newAttributedString.range(of: originalText[range]) {
-                    newAttributedString[attrRange].font = .system(.body, weight: .bold)
+                    let bodySize = UIFont.preferredFont(forTextStyle: .body).pointSize
+                    newAttributedString[attrRange].font = .system(size: bodySize, weight: .bold)
                     newAttributedString[attrRange].foregroundColor = .blue
                 }
             }
