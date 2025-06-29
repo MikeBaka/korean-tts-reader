@@ -1,38 +1,102 @@
-import Foundation
+// PASTE THIS ENTIRE CORRECTED BLOCK INTO ReaderViewModel.swift
 
-public struct SpeechMark: Decodable, Equatable {
-    public let word: String
-    public let startMs: Int
-    public let charStart: Int
-    public let charEnd: Int
+import SwiftUI
+import Combine
 
-    // Polly returns a stream of JSON objects, one per line.
-    // This private struct is used to decode the raw data before filtering.
-    private struct PollySpeechMark: Decodable {
-        let time: Int
-        let type: String
-        let start: Int
-        let end: Int
-        let value: String
+public protocol TTSPlayerProtocol {
+    var isPlayingPublisher: AnyPublisher<Bool, Never> { get }
+    var currentTimePublisher: AnyPublisher<TimeInterval, Never> { get }
+    func play(url: URL)
+    func pause()
+}
+
+
+public final class ReaderViewModel: ObservableObject {
+    @Published public private(set) var isPlaying: Bool = false
+    @Published public var attributed: AttributedString
+    @Published public var speechMarks: [SpeechMark] = []
+    @Published public var currentWordIndex: Int = -1
+
+    private let originalText: String
+    private var audioURL: URL?
+    private let pollyManager = PollyManager()
+    private let ttsPlayer: TTSPlayerProtocol
+    private var cancellables = Set<AnyCancellable>()
+
+    public init(text: String, ttsPlayer: TTSPlayerProtocol = TTSPlayer()) {
+        self.originalText = text
+        self.ttsPlayer = ttsPlayer
+        self.attributed = AttributedString(text)
+        setupBindings()
+        synthesizeText()
     }
 
-    public static func parseLines(from data: Data) -> [SpeechMark] {
-        guard let text = String(data: data, encoding: .utf8) else { return [] }
-        let lines = text.split(separator: "\n")
-        let decoder = JSONDecoder()
+    public func togglePlay() {
+        guard let url = audioURL else { return }
 
-        return lines.compactMap { line in
-            guard let lineData = String(line).data(using: .utf8),
-                  let pollyMark = try? decoder.decode(PollySpeechMark.self, from: lineData),
-                  pollyMark.type == "word" else {
-                return nil
-            }
-            return SpeechMark(
-                word: pollyMark.value,
-                startMs: pollyMark.time,
-                charStart: pollyMark.start,
-                charEnd: pollyMark.end
-            )
+        if isPlaying {
+            ttsPlayer.pause()
+        } else {
+            ttsPlayer.play(url: url)
         }
     }
+
+    private func setupBindings() {
+        ttsPlayer.isPlayingPublisher
+            .receive(on: DispatchQueue.main)
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
+
+        ttsPlayer.currentTimePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] time in
+                self?.updateHighlight(at: time)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func synthesizeText() {
+        pollyManager.synthesize(text: originalText) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data):
+                    self?.audioURL = data.audio
+                    self?.speechMarks = data.marks
+                    self?.updateAttributedString()
+                case .failure(let error):
+                    print("Synthesis failed: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func updateHighlight(at time: TimeInterval) {
+        let timeInMs = Int(time * 1000)
+        guard let newIndex = speechMarks.lastIndex(where: { $0.startMs <= timeInMs }) else {
+            return
+        }
+
+        if currentWordIndex != newIndex {
+            currentWordIndex = newIndex
+            updateAttributedString()
+        }
+    }
+
+    private func updateAttributedString() {
+        var newAttributed = AttributedString(originalText)
+        if currentWordIndex >= 0 && currentWordIndex < speechMarks.count {
+            let mark = speechMarks[currentWordIndex]
+            // THE DEFINITIVE FIX IS HERE:
+            if let range = newAttributed.range(of: mark.word) {
+                newAttributed[range].backgroundColor = .yellow
+            }
+        }
+        self.attributed = newAttributed
+    }
+}
+
+
+extension TTSPlayer: TTSPlayerProtocol {
+    public var isPlayingPublisher: AnyPublisher<Bool, Never> { $isPlaying.eraseToAnyPublisher() }
+    public var currentTimePublisher: AnyPublisher<TimeInterval, Never> { $currentTime.eraseToAnyPublisher() }
 }
