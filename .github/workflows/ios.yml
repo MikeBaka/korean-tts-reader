@@ -15,6 +15,7 @@ jobs:
         run: |
           xcodebuild \
             -scheme HanguTTS \
+            -project HanguTTS.xcodeproj \   # <--  add this line
             -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
