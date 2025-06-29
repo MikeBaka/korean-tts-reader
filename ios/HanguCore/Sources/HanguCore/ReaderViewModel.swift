@@ -66,8 +66,8 @@ public final class ReaderViewModel: ObservableObject {
     private func setupBindings() {
         // When testing with a mock player, we might need to manually publish changes.
         // This setup handles both the real player's @Published property and a mock's PassthroughSubject.
-        let isPlayingPublisher = (ttsPlayer as? MockTTSPlayer)?.isPlayingPublisher ?? ttsPlayer.$isPlaying.eraseToAnyPublisher()
-        let currentTimePublisher = (ttsPlayer as? MockTTSPlayer)?.currentTimePublisher ?? ttsPlayer.$currentTime.eraseToAnyPublisher()
+        let isPlayingPublisher = ttsPlayer.$isPlaying.eraseToAnyPublisher()?? ttsPlayer.$isPlaying.eraseToAnyPublisher()
+        let currentTimePublisher = ttsPlayer.$currentTime.eraseToAnyPublisher()?? ttsPlayer.$currentTime.eraseToAnyPublisher()
 
         isPlayingPublisher
             .receive(on: DispatchQueue.main)

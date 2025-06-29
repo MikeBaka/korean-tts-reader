@@ -7,50 +7,6 @@ enum Config {
     }
 
     static func credentialProvider() -> AWSCredentialsProvider? {
-        // Check for awsconfiguration.json in the main bundle first.
-        if let configPath = Bundle.main.path(forResource: "awsconfiguration", ofType: "json"),
-           let configJson = try? Data(contentsOf: URL(fileURLWithPath: configPath)),
-           let config = try? JSONDecoder().decode([String: AnyDecodable].self, from: configJson),
-           let credentialsProviderConfig = config["CredentialsProvider"]?.value as? [String: Any],
-           let cognitoIdentity = credentialsProviderConfig["CognitoIdentity"] as? [String: Any],
-           let poolId = (cognitoIdentity["Default"] as? [String: Any])?["PoolId"] as? String,
-    // region string may be nil – fall back to USEast1
-
-    let regionStr = (cognitoIdentity["Default"] as? [String: Any])?["Region"] as? String
-
-    let region: AWSRegionType
-
-    switch (regionStr ?? "").lowercased() {
-
-    case "us-west-2":       region = .USWest2
-
-    case "ap-northeast-2":  region = .APNortheast2
-
-    default:                region = .USEast1
-
-    }
-
-    return AWSCognitoCredentialsProvider(
-
-        regionType:     region,
-
-        identityPoolId: poolId
-
-    )
-                    regionType: region,
-                    identityPoolId: poolId
-            )
-
-        // Fallback to environment variables
-        let accessKey = ProcessInfo.processInfo.environment["AWS_ACCESS_KEY_ID"]
-        let secretKey = ProcessInfo.processInfo.environment["AWS_SECRET_ACCESS_KEY"]
-
-        if let accessKey = accessKey, !accessKey.isEmpty, let secretKey = secretKey, !secretKey.isEmpty {
-            return AWSStaticCredentialsProvider(accessKey: accessKey, secretKey: secretKey)
-        }
-
-        return nil
-    }
 }
 
 // Helper to decode [String: Any]
@@ -85,3 +41,21 @@ struct AnyDecodable: Decodable {
         }
     }
 }
+        // region string may be nil – fall back to USEast1
+        let regionStr = (cognitoIdentity["Default"] as? [String: Any])?["Region"] as? String
+
+        let region: AWSRegionType = {
+            switch (regionStr ?? "").lowercased() {
+            case "us-west-2":      return .USWest2
+            case "ap-northeast-2": return .APNortheast2
+            default:               return .USEast1
+            }
+        }()
+
+        return AWSCognitoCredentialsProvider(
+            regionType:     region,
+            identityPoolId: poolId
+        )
+    }
+
+    // ── Fallback to environment variables ─────────────────────────────────
