@@ -1,4 +1,4 @@
-// PASTE THIS CORRECTED CODE INTO ReaderViewModel.swift
+// PASTE THIS INTO HanguCore/Sources/HanguCore/ReaderViewModel.swift
 
 import SwiftUI
 import Combine
@@ -22,7 +22,6 @@ public final class ReaderViewModel: ObservableObject {
     private let ttsPlayer: TTSPlayerProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    // THIS IS THE CORRECT INIT, IT REQUIRES TEXT
     public init(text: String, ttsPlayer: TTSPlayerProtocol = TTSPlayer()) {
         self.originalText = text
         self.ttsPlayer = ttsPlayer
@@ -33,12 +32,7 @@ public final class ReaderViewModel: ObservableObject {
 
     public func togglePlay() {
         guard let url = audioURL else { return }
-
-        if isPlaying {
-            ttsPlayer.pause()
-        } else {
-            ttsPlayer.play(url: url)
-        }
+        if isPlaying { ttsPlayer.pause() } else { ttsPlayer.play(url: url) }
     }
 
     public func exportVocab() {
@@ -46,17 +40,8 @@ public final class ReaderViewModel: ObservableObject {
     }
 
     private func setupBindings() {
-        ttsPlayer.isPlayingPublisher
-            .receive(on: DispatchQueue.main)
-            .assign(to: \.isPlaying, on: self)
-            .store(in: &cancellables)
-
-        ttsPlayer.currentTimePublisher
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] time in
-                self?.updateHighlight(at: time)
-            }
-            .store(in: &cancellables)
+        ttsPlayer.isPlayingPublisher.receive(on: DispatchQueue.main).assign(to: \.isPlaying, on: self).store(in: &cancellables)
+        ttsPlayer.currentTimePublisher.receive(on: DispatchQueue.main).sink { [weak self] time in self?.updateHighlight(at: time) }.store(in: &cancellables)
     }
 
     private func synthesizeText() {
@@ -76,10 +61,7 @@ public final class ReaderViewModel: ObservableObject {
 
     private func updateHighlight(at time: TimeInterval) {
         let timeInMs = Int(time * 1000)
-        guard let newIndex = speechMarks.lastIndex(where: { $0.startMs <= timeInMs }) else {
-            return
-        }
-
+        guard let newIndex = speechMarks.lastIndex(where: { $0.startMs <= timeInMs }) else { return }
         if currentWordIndex != newIndex {
             currentWordIndex = newIndex
             updateAttributedString()
@@ -97,7 +79,6 @@ public final class ReaderViewModel: ObservableObject {
         self.attributed = newAttributed
     }
 }
-
 
 extension TTSPlayer: TTSPlayerProtocol {
     public var isPlayingPublisher: AnyPublisher<Bool, Never> { $isPlaying.eraseToAnyPublisher() }
