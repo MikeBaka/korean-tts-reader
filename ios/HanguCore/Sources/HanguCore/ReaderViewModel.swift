@@ -1,4 +1,4 @@
-// PASTE THIS ENTIRE CORRECTED BLOCK INTO ReaderViewModel.swift
+// PASTE THIS INTO ReaderViewModel.swift
 
 import SwiftUI
 import Combine
@@ -9,7 +9,6 @@ public protocol TTSPlayerProtocol {
     func play(url: URL)
     func pause()
 }
-
 
 public final class ReaderViewModel: ObservableObject {
     @Published public private(set) var isPlaying: Bool = false
@@ -60,7 +59,6 @@ public final class ReaderViewModel: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let data):
-                    // FIX 2: Access tuple elements by their correct names: .audio and .marks
                     self?.audioURL = data.audio
                     self?.speechMarks = data.marks
                     self?.updateAttributedString()
@@ -87,8 +85,7 @@ public final class ReaderViewModel: ObservableObject {
         var newAttributed = AttributedString(originalText)
         if currentWordIndex >= 0 && currentWordIndex < speechMarks.count {
             let mark = speechMarks[currentWordIndex]
-            // FIX 3: The property on SpeechMark is .text, not .value
-            if let range = newAttributed.range(of: mark.value) {
+            if let range = newAttributed.range(of: mark.word) {
                 newAttributed[range].backgroundColor = .yellow
             }
         }
@@ -98,7 +95,6 @@ public final class ReaderViewModel: ObservableObject {
 
 
 extension TTSPlayer: TTSPlayerProtocol {
-    // FIX 1: Add 'public' to satisfy the public protocol requirement
     public var isPlayingPublisher: AnyPublisher<Bool, Never> { $isPlaying.eraseToAnyPublisher() }
     public var currentTimePublisher: AnyPublisher<TimeInterval, Never> { $currentTime.eraseToAnyPublisher() }
 }
