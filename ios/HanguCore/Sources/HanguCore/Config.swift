@@ -14,14 +14,29 @@ enum Config {
            let credentialsProviderConfig = config["CredentialsProvider"]?.value as? [String: Any],
            let cognitoIdentity = credentialsProviderConfig["CognitoIdentity"] as? [String: Any],
            let poolId = (cognitoIdentity["Default"] as? [String: Any])?["PoolId"] as? String,
-           let regionStr = (cognitoIdentity["Default"] as? [String: Any])?["Region"] as? String,
-           let region: AWSRegionType
-           switch (regionStr ?? "").lowercased() {
-           case "us-west-2":        region = .USWest2
-           case "ap-northeast-2":   region = .APNortheast2
-           default:                 region = .USEast1     // safe default
-           }
-           return AWSCognitoCredentialsProvider(
+    // region string may be nil – fall back to USEast1
+
+    let regionStr = (cognitoIdentity["Default"] as? [String: Any])?["Region"] as? String
+
+    let region: AWSRegionType
+
+    switch (regionStr ?? "").lowercased() {
+
+    case "us-west-2":       region = .USWest2
+
+    case "ap-northeast-2":  region = .APNortheast2
+
+    default:                region = .USEast1
+
+    }
+
+    return AWSCognitoCredentialsProvider(
+
+        regionType:     region,
+
+        identityPoolId: poolId
+
+    )
                     regionType: region,
                     identityPoolId: poolId
             )
