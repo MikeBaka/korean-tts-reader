@@ -1,38 +1,44 @@
 name: Build iOS IPA
 
 on:
-  workflow_dispatch:      # manual trigger in GitHub UI
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-14     # free GitHub-hosted Sonoma runner
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      # Build unsigned .app (skip code-signing)
+      # 👉 NEW: generate the Xcode project
+      - name: Generate Xcode project
+        working-directory: ios
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      # build unsigned .app
       - name: Build app
-        working-directory: ios          # <-- new line
+        working-directory: ios
         run: |
           xcodebuild \
             -scheme HanguTTS \
-            -project HanguTTS.xcodeproj \   # <--  add this line
+            -project HanguTTS.xcodeproj \   # ← now points at the generated project
             -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
 
-      # Package into an unsigned .ipa
+      # package into an unsigned .ipa
       - name: Package IPA
-        working-directory: ios          # stay in the ios folder
+        working-directory: ios
         run: |
           APP_PATH=$(find build/Build/Products/Release-iphoneos -name 'HanguTTS.app' | head -n 1)
           mkdir -p Payload
           cp -R "$APP_PATH" Payload/
           /usr/bin/zip -r HanguTTS-unsigned.ipa Payload
 
-
-      # Upload artifact for download
+      # upload
       - uses: actions/upload-artifact@v4
         with:
           name: HanguTTS-unsigned
-          path: ios/HanguTTS-unsigned.ipa
+          path: HanguTTS-unsigned.ipa
