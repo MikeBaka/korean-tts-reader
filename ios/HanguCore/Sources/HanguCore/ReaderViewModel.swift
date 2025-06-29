@@ -1,4 +1,4 @@
-// PASTE THIS INTO ReaderViewModel.swift
+// PASTE THIS CORRECTED CODE INTO ReaderViewModel.swift
 
 import SwiftUI
 import Combine
@@ -22,7 +22,7 @@ public final class ReaderViewModel: ObservableObject {
     private let ttsPlayer: TTSPlayerProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    // THIS IS THE CORRECT INIT METHOD
+    // THIS IS THE CORRECT INIT, IT REQUIRES TEXT
     public init(text: String, ttsPlayer: TTSPlayerProtocol = TTSPlayer()) {
         self.originalText = text
         self.ttsPlayer = ttsPlayer
