@@ -44,7 +44,7 @@ public final class PollyManager {
             if let presignedURL = task.result {
                 // Download the audio data
                 group.enter()
-                URLSession.shared.dataTask(with: presignedURL) { data, _, error in
+                URLSession.shared.dataTask(with: presignedURL as URL) { data, _, error in
                     defer { group.leave() }
                     if let error = error {
                         capturedError = error
@@ -82,7 +82,7 @@ public final class PollyManager {
             if let presignedURL = task.result {
                 // Download the speech mark data
                 group.enter()
-                URLSession.shared.dataTask(with: presignedURL) { data, _, error in
+                URLSession.shared.dataTask(with: presignedURL as URL) { data, _, error in
                     defer { group.leave() }
                     if let error = error {
                         capturedError = error
