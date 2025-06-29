@@ -7,7 +7,7 @@ public final class ReaderViewModel: ObservableObject {
     // MARK: - Published values expected by ReaderView
     @Published public private(set) var isPlaying: Bool = false
 
-    @Published var speechMarks: [SpeechMark] = []
+
 
     @Published var currentWordIndex: Int = 0
 
