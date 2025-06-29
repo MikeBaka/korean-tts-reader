@@ -1,7 +1,8 @@
-// PASTE THIS INTO HanguTTS/ReaderView.swift
+```swift
+// PASTE THIS CORRECTED CODE INTO ReaderView.swift
 
 import SwiftUI
-import HanguCore // Imports the code from your framework
+import HanguCore
 import Combine
 
 struct ReaderView: View {
@@ -10,12 +11,12 @@ struct ReaderView: View {
     private static let sampleText = "안녕하세요, 만나서 반갑습니다. 제 이름은 루입니다."
 
     init() {
-        // This now correctly calls the init from the HanguCore module
         _viewModel = StateObject(wrappedValue: ReaderViewModel(text: Self.sampleText))
     }
 
     var body: some View {
-        NavigationStack {
+        // FIX: Replaced NavigationStack with NavigationView for iOS 15 compatibility.
+        NavigationView {
             ScrollableTextView(
                 attributedString: $viewModel.attributed,
                 highlightedWordIndex: $viewModel.currentWordIndex,
@@ -84,3 +85,4 @@ struct ReaderView_Previews: PreviewProvider {
         ReaderView()
     }
 }
+```
