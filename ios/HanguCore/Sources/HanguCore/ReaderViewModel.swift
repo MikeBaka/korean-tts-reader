@@ -145,9 +145,3 @@ extension TTSPlayer: TTSPlayerProtocol {
     var currentTimePublisher: AnyPublisher<TimeInterval, Never> { $currentTime.eraseToAnyPublisher() }
 }
 
-fileprivate class MockTTSPlayer: TTSPlayer {
-    let mockIsPlayingPublisher = PassthroughSubject<Bool, Never>()
-    let mockCurrentTimePublisher = PassthroughSubject<TimeInterval, Never>()
-    override var isPlayingPublisher: AnyPublisher<Bool, Never> { mockIsPlayingPublisher.eraseToAnyPublisher() }
-    override var currentTimePublisher: AnyPublisher<TimeInterval, Never> { mockCurrentTimePublisher.eraseToAnyPublisher() }
-}
