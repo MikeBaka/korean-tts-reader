@@ -1,0 +1,6 @@
+[
+    {"time":8,"type":"sentence","start":0,"end":13,"value":"안녕하세요, 만나서 반갑습니다."},
+    {"time":103,"type":"word","start":0,"end":5,"value":"안녕하세요"},
+    {"time":701,"type":"word","start":7,"end":10,"value":"만나서"},
+    {"time":1137,"type":"word","start":11,"end":13,"value":"반갑습니다"}
+]
