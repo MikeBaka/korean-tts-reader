@@ -1,176 +1,111 @@
-import Foundation
-import Combine
+// PASTE THIS ENTIRE BLOCK INTO ReaderViewModel.swift
+
 import SwiftUI
+import Combine
 
-@MainActor
+// This protocol should probably be in its own file, but here is fine for now.
+public protocol TTSPlayerProtocol {
+    var isPlayingPublisher: AnyPublisher<Bool, Never> { get }
+    var currentTimePublisher: AnyPublisher<TimeInterval, Never> { get }
+    func play(url: URL)
+    func pause()
+}
+
+
 public final class ReaderViewModel: ObservableObject {
-    // MARK: - Published values expected by ReaderView
+    // FIX 1: Single, consolidated property declarations
     @Published public private(set) var isPlaying: Bool = false
-
-
-
-    @Published var currentWordIndex: Int = 0
-
-    var isPlaying: Bool { ttsPlayer.isPlaying }
-
-
-    // MARK: - Published Properties
     @Published public var attributed: AttributedString
-    @Published public var isPlaying: Bool = false
+    @Published public var speechMarks: [SpeechMark] = []
+    @Published public var currentWordIndex: Int = -1
 
-    // MARK: - Public Properties
-    public var vocab: Set<String> = []
-    
-    // MARK: - Internal Properties for Testing
-    var speechMarks: [SpeechMark] = []
-    var currentWordIndex: Int = -1 {
-        didSet {
-            if oldValue != currentWordIndex {
-                updateAttributedString()
-            }
-        }
-    }
-
-    // MARK: - Private Properties
     private let originalText: String
-    private let pollyManager: PollyManager
-    private let ttsPlayer: TTSPlayer
-
     private var audioURL: URL?
+    private let pollyManager = PollyManager()
+    private let ttsPlayer: TTSPlayerProtocol
     private var cancellables = Set<AnyCancellable>()
 
-    // MARK: - Initializer
-    // The initializer now accepts both a PollyManager and a TTSPlayer for full
-    // dependency injection during testing.
-    public init(text: String, pollyManager: PollyManager = PollyManager(), ttsPlayer: TTSPlayer = TTSPlayer()) {
+    public init(text: String, ttsPlayer: TTSPlayerProtocol = TTSPlayer()) {
         self.originalText = text
-        self.attributed = AttributedString(text)
-        self.pollyManager = pollyManager
         self.ttsPlayer = ttsPlayer
-
+        self.attributed = AttributedString(text)
         setupBindings()
-
-    // MARK: - UI actions
-    func togglePlay() {
-        if ttsPlayer.isPlaying {
-            ttsPlayer.pause()
-        } else if
-          let url = Bundle.main.url(forResource: "sample", withExtension: "mp3") {
-            ttsPlayer.play(url: url)
-        }
+        synthesizeText()
     }
 
-
-    // MARK: - Public Methods
+    // FIX 2: Single, correct togglePlay() function
     public func togglePlay() {
-        guard audioURL != nil else { return }
+        guard let url = audioURL else { return }
 
-        if ttsPlayer.isPlaying {
+        if isPlaying {
             ttsPlayer.pause()
         } else {
-            if ttsPlayer.currentTime > 0 {
-                ttsPlayer.resume()
-            } else if let url = self.audioURL {
-                ttsPlayer.play(url: url)
-            }
+            ttsPlayer.play(url: url) // FIX 3: Pass the required 'url' parameter
         }
     }
 
-    public func exportVocab() {
-        VocabularyExporter.share(vocab)
-    }
-
-    // MARK: - Private & Internal Methods
     private func setupBindings() {
-
-    // MARK: - UI actions
-    func togglePlay() {
-        if ttsPlayer.isPlaying {
-            ttsPlayer.pause()
-        } else {
-            ttsPlayer.play()
-        }
-    }
-
-        // When testing with a mock player, we might need to manually publish changes.
-        // This setup handles both the real player's @Published property and a mock's PassthroughSubject.
-        let isPlayingPublisher = ttsPlayer.$isPlaying.eraseToAnyPublisher()
-        let currentTimePublisher = ttsPlayer.$currentTime.eraseToAnyPublisher()
-
-        isPlayingPublisher
+        // Bind the player's isPlaying state to our published property
+        ttsPlayer.isPlayingPublisher
             .receive(on: DispatchQueue.main)
-            .assign(to: &$isPlaying)
+            .assign(to: \.isPlaying, on: self)
+            .store(in: &cancellables)
 
-        currentTimePublisher
+        // Listen for time updates to highlight words
+        ttsPlayer.currentTimePublisher
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] newTime in
-                self?.updateHighlight(at: newTime)
+            .sink { [weak self] time in
+                self?.updateHighlight(at: time)
             }
             .store(in: &cancellables)
     }
 
     private func synthesizeText() {
         pollyManager.synthesize(text: originalText) { [weak self] result in
-            guard let self = self else { return }
-            switch result {
-            case .success((let audioURL, let marks)):
-                self.audioURL = audioURL
-                self.speechMarks = marks
-                self.buildVocabulary()
-            case .failure(let error):
-                print("Synthesis failed: \(error.localizedDescription)")
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data):
+                    self?.audioURL = data.audioURL
+                    self?.speechMarks = data.speechMarks
+                    // Now that we have speech marks, you might want to update the attributed string
+                    self?.updateAttributedString()
+                case .failure(let error):
+                    print("Synthesis failed: \(error.localizedDescription)")
+                }
             }
         }
     }
-    
-    private func buildVocabulary() {
-        let words = speechMarks.map { $0.word }
-        let cleanedWords = words.map { $0.trimmingCharacters(in: .punctuationCharacters) }
-        self.vocab = Set(cleanedWords.filter { !$0.isEmpty })
-    }
 
-    func updateHighlight(at time: TimeInterval) {
+    private func updateHighlight(at time: TimeInterval) {
         let timeInMs = Int(time * 1000)
-        
         guard let newIndex = speechMarks.lastIndex(where: { $0.startMs <= timeInMs }) else {
-            if currentWordIndex != -1 {
-                currentWordIndex = -1
-            }
             return
         }
 
-        if newIndex != currentWordIndex {
+        if currentWordIndex != newIndex {
             currentWordIndex = newIndex
+            updateAttributedString()
         }
     }
 
     private func updateAttributedString() {
-        var newAttributedString = AttributedString(originalText)
-
+        var newAttributed = AttributedString(originalText)
         if currentWordIndex >= 0 && currentWordIndex < speechMarks.count {
             let mark = speechMarks[currentWordIndex]
-            
-            if let range = Range(NSRange(location: mark.charStart, length: mark.charEnd - mark.charStart), in: originalText) {
-                if let attrRange = newAttributedString.range(of: originalText[range]) {
-                    let bodySize = UIFont.preferredFont(forTextStyle: .body).pointSize
-                    newAttributedString[attrRange].font = .system(size: bodySize, weight: .bold)
-                    newAttributedString[attrRange].foregroundColor = .blue
-                }
+            if let range = newAttributed.range(of: mark.value) {
+                newAttributed[range].backgroundColor = .yellow
             }
         }
-        self.attributed = newAttributedString
+        self.attributed = newAttributed
     }
+
+// FIX 4: The class's closing brace was moved here, to the very end of the class.
 }
 
-// Helper protocol and extension to allow mocking both @Published and PassthroughSubject publishers
-// This is a more robust way to handle testing with Combine.
-fileprivate protocol TTSPlayerProtocol {
-    var isPlayingPublisher: AnyPublisher<Bool, Never> { get }
-    var currentTimePublisher: AnyPublisher<TimeInterval, Never> { get }
-}
 
+// The extension must be OUTSIDE the class definition.
 extension TTSPlayer: TTSPlayerProtocol {
+    // These computed properties make TTSPlayer conform to the protocol
     var isPlayingPublisher: AnyPublisher<Bool, Never> { $isPlaying.eraseToAnyPublisher() }
     var currentTimePublisher: AnyPublisher<TimeInterval, Never> { $currentTime.eraseToAnyPublisher() }
 }
-
