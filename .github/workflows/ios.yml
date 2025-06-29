@@ -11,12 +11,14 @@ jobs:
 
       # Build unsigned .app (skip code-signing)
       - name: Build app
+        working-directory: ios          # <-- new line
         run: |
-          xcodebuild -scheme HanguTTS \
-                     -destination 'generic/platform=iOS' \
-                     -configuration Release \
-                     BUILD_DIR=$(pwd)/build \
-                     CODE_SIGNING_ALLOWED=NO
+          xcodebuild \
+            -scheme HanguTTS \
+            -destination 'generic/platform=iOS' \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO
 
       # Package into an unsigned .ipa
       - name: Package IPA
