@@ -15,7 +15,15 @@ targets:
   HanguCore:
     type: framework
     platform: iOS
-    sources: [HanguCore]
+    # ✅ compile only the Swift sources under Sources/
+    sources:
+      - path: HanguCore/Sources
+
+    # (optional) ship the sample JSON/TXT inside the framework for demo purposes
+    resources:
+      - path: HanguCore/Tests/shared/samples
+        optional: true
+
     dependencies:
       - package: AWSiOSSDK
         product: AWSCore
