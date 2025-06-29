@@ -4,6 +4,14 @@ import SwiftUI
 
 @MainActor
 public final class ReaderViewModel: ObservableObject {
+    // MARK: - Published values expected by ReaderView
+
+    @Published var speechMarks: [SpeechMark] = []
+
+    @Published var currentWordIndex: Int = 0
+
+    var isPlaying: Bool { ttsPlayer.isPlaying }
+
 
     // MARK: - Published Properties
     @Published public var attributed: AttributedString
@@ -40,6 +48,16 @@ public final class ReaderViewModel: ObservableObject {
         self.ttsPlayer = ttsPlayer
 
         setupBindings()
+
+    // MARK: - UI actions
+    func togglePlay() {
+        if ttsPlayer.isPlaying {
+            ttsPlayer.pause()
+        } else {
+            ttsPlayer.play()
+        }
+    }
+
         synthesizeText()
     }
 
@@ -64,6 +82,16 @@ public final class ReaderViewModel: ObservableObject {
 
     // MARK: - Private & Internal Methods
     private func setupBindings() {
+
+    // MARK: - UI actions
+    func togglePlay() {
+        if ttsPlayer.isPlaying {
+            ttsPlayer.pause()
+        } else {
+            ttsPlayer.play()
+        }
+    }
+
         // When testing with a mock player, we might need to manually publish changes.
         // This setup handles both the real player's @Published property and a mock's PassthroughSubject.
         let isPlayingPublisher = ttsPlayer.$isPlaying.eraseToAnyPublisher()
