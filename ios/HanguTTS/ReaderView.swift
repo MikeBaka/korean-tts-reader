@@ -1,4 +1,4 @@
-// PASTE THIS CORRECTED CODE INTO ReaderView.swift
+// PASTE THIS INTO ReaderView.swift
 
 import SwiftUI
 import HanguCore
@@ -32,15 +32,14 @@ struct ReaderView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    // FIX 1: The 'action' must be a closure that calls the function.
+                    // THE FIX IS HERE
                     Button(action: { viewModel.togglePlay() }) {
-                        // This part was already correct.
                         Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
                             .font(.body)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    // FIX 2: This also needs to be a closure.
+                    // AND HERE
                     Button("Export", action: { viewModel.exportVocab() })
                 }
             }
