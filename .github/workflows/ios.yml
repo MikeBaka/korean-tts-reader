@@ -22,11 +22,12 @@ jobs:
         run: |
           xcodebuild \
             -scheme HanguTTS \
-            -project HanguTTS.xcodeproj \   # ← now points at the generated project
+            -project HanguTTS.xcodeproj \
             -destination 'generic/platform=iOS' \
             -configuration Release \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO
+
 
       # package into an unsigned .ipa
       - name: Package IPA
