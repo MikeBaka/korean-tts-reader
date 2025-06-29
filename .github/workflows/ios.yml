@@ -16,7 +16,6 @@ jobs:
           brew install xcodegen
           xcodegen generate
 
-      # build unsigned .app
       - name: Build app
         working-directory: ios
         run: |
