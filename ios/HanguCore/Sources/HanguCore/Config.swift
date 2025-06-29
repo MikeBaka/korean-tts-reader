@@ -41,3 +41,4 @@ enum Config {
 
         return nil
     }
+}
