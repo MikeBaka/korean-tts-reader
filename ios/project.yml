@@ -1,26 +1,37 @@
 name: HanguTTS
 options:
-  bundleIdPrefix: com.example    # change if you like
+  bundleIdPrefix: com.example
   deploymentTarget:
     iOS: "15.0"
 
+# 👉 NEW: pull AWS SDK for iOS via Swift-PM
 packages:
-  HanguCore:
-    path: ./HanguCore            # local Swift Package
+  AWSiOSSDK:
+    url: https://github.com/aws-amplify/aws-sdk-ios-spm.git
+    from: 2.31.0          # or “from: 2.30.0” anything 2.30+
 
 targets:
   HanguTTS:
     type: application
     platform: iOS
-    sources: [HanguTTS]          # folder with HanguTTSApp.swift, ReaderView.swift…
+    sources: [HanguTTS]
     dependencies:
-      - package: HanguCore
+      - package: HanguCore             # our local package
+  HanguCore:
+    type: framework                    # keep this entry if you defined it; otherwise leave out
+    platform: iOS
+    sources: [HanguCore]
+    dependencies:
+      # 👉 NEW: link AWSCore + AWSPolly
+      - package: AWSiOSSDK
+        product: AWSCore
+      - package: AWSiOSSDK
+        product: AWSPolly
     info:
-      path: Info.plist           # we’ll generate a minimal one below
+      path: Info.plist
       properties:
         CFBundleDisplayName: HanguTTS
         CFBundleIdentifier: com.example.hangutts
         UILaunchStoryboardName: ""
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-          - UIInterfaceOrientationPortraitUpsideDown
