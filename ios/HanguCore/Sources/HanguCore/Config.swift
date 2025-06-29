@@ -15,8 +15,11 @@ enum Config {
            let cognitoIdentity = credentialsProviderConfig["CognitoIdentity"] as? [String: Any],
            let poolId = (cognitoIdentity["Default"] as? [String: Any])?["PoolId"] as? String,
            let regionStr = (cognitoIdentity["Default"] as? [String: Any])?["Region"] as? String,
-           let region = AWSRegionType(rawValue: regionStr) {
-            return AWSCognitoCredentialsProvider(regionType: region, identityPoolId: poolId)
+           let region: AWSRegionType
+           switch regionStr.lowercased() {
+           case "us-west-2": region = .USWest2
+           case "ap-northeast-2": region = .APNortheast2
+           default:          region = .USEast1        // safe default
         }
 
         // Fallback to environment variables
